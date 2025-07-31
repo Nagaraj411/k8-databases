@@ -1,4 +1,3 @@
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,27 +8,28 @@ metadata:
     project: roboshop
     tier: app
 data:
-    CART_ENDPOINT: "CART:8080"
-    DB_HOST: "mysql"
+  CART_ENDPOINT: "cart:8080"
+  DB_HOST: "mysql"
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: # Deployment metadata
+metadata:
   name: shipping
-  namespace: roboshop # Namespace for the deployment
+  namespace: roboshop
+  # deployment labels
   labels:
     component: shipping
     project: roboshop
     tier: app
-    # This is the deployment for shipping
 spec:
-  replicas: 1 # Number of replicas
+  replicas: 1
+  # These are the labels replica set use to create pod replicas, this should match pod labels
   selector:
     matchLabels:
       component: shipping
       project: roboshop
       tier: app
-# this is pod definition
+  # This is pod definition
   template:
     metadata:
       labels:
@@ -38,25 +38,24 @@ spec:
         tier: app
     spec:
       containers:
-        - name: shipping
-          image: nagaraj411/shipping:v1 # Shipping image
-          resources:                  # 🔹 Resource configuration
-            requests:
-              cpu: "100m"              # 🟡 Minimum CPU required
-              memory: "256Mi"         # 🟡 Minimum memory required
-            limits:
-              cpu: "200m"             # 🔴 Max CPU allowed
-              memory: "512Mi"         # 🔴 Max memory allowed
-          envFrom:
-          - configMapRef:
-              name: shipping # Reference to the ConfigMap
+      - name: shipping
+        image: nagaraj411/shipping:v1
+        resources:
+          requests:
+            cpu: "100m"       # 🔴 Minimum CPU allowed
+            memory: "256Mi"   # 🔴 Minimum memory allowed
+          limits:
+            cpu: "200m"       # 🔴 Max CPU allowed
+            memory: "512Mi"   # 🔴 Max memory allowed
+        envFrom:
+        - configMapRef:
+            name: shipping
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   name: shipping
-  namespace: roboshop # Namespace for the service
+  namespace: roboshop
   labels:
     component: shipping
     project: roboshop
@@ -67,28 +66,26 @@ spec:
     project: roboshop
     tier: app
   ports:
-  - protocol: TCP # Protocol for the service
-    port: 8080 # shipping default service port
+  - protocol: TCP
+    port: 8080 # service port
     targetPort: 8080 # container port
-
 ---
-# Horizontal Pod Autoscaler: Scale Pods Automatically
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: shipping                          # 🔹 HPA name
+  name: shipping
   namespace: roboshop
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: shipping                          # 🎯 Target: shipping deployment
-  minReplicas: 1                        # 🟢 Minimum pods
-  maxReplicas: 10                       # 🔺 Maximum pods
+    name: shipping      # 🎯 Target: shipping deployment
+  minReplicas: 1       # 🟢 Minimum pods
+  maxReplicas: 10      # 🔺 Maximum pods
   metrics:
   - type: Resource
     resource:
-      name: cpu                     # 📊 Monitored metric
+      name: cpu
       target:
         type: Utilization
-        averageUtilization: 10     # 📈 Scale up if CPU > 10%
+        averageUtilization: 10
