@@ -41,11 +41,11 @@ spec:
           image: nagaraj411/shipping:v1 # Shipping image
           resources:                  # 🔹 Resource configuration
             requests:
-              cpu: "10m"              # 🟡 Minimum CPU required
-              memory: "50Mi"         # 🟡 Minimum memory required
+              cpu: "50m"              # 🟡 Minimum CPU required
+              memory: "128Mi"         # 🟡 Minimum memory required
             limits:
-              cpu: "20m"             # 🔴 Max CPU allowed
-              memory: "100Mi"         # 🔴 Max memory allowed
+              cpu: "100m"             # 🔴 Max CPU allowed
+              memory: "256Mi"         # 🔴 Max memory allowed
           envFrom:
           - configMapRef:
               name: shipping # Reference to the ConfigMap
