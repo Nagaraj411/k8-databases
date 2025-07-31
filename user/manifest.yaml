@@ -42,11 +42,11 @@ spec:
           image: nagaraj411/user:v1   # User image
           resources:                  # 🔹 Resource configuration
             requests:
-            cpu: "50m"              # 🟡 Minimum CPU required
-            memory: "128Mi"         # 🟡 Minimum memory required
-          limits:
-            cpu: "100m"             # 🔴 Max CPU allowed
-            memory: "256Mi"         # 🔴 Max memory allowed
+              cpu: "50m"              # 🟡 Minimum CPU required
+              memory: "128Mi"         # 🟡 Minimum memory required
+            limits:
+              cpu: "100m"             # 🔴 Max CPU allowed
+              memory: "256Mi"         # 🔴 Max memory allowed
           envFrom:
           - configMapRef:
               name: user # Reference to the ConfigMap
