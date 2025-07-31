@@ -8,28 +8,29 @@ metadata:
     project: roboshop
     tier: app
 data:
-  MONGO: "true"
-  REDIS_URL: "redis://redis:6379"
   MONGO_URL: "mongodb://mongodb:27017/users"
+  REDIS_URL: "redis://redis:6379"
+  MONGO: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: # Deployment metadata
+metadata:
   name: user
-  namespace: roboshop # Namespace for the deployment
+  namespace: roboshop
+  # deployment labels
   labels:
     component: user
     project: roboshop
     tier: app
-    # This is the deployment for user
 spec:
-  replicas: 1 # Number of replicas
+  replicas: 1
+  # These are the labels replica set use to create pod replicas, this should match pod labels
   selector:
     matchLabels:
       component: user
       project: roboshop
       tier: app
-# this is pod definition
+  # This is pod definition
   template:
     metadata:
       labels:
@@ -38,24 +39,24 @@ spec:
         tier: app
     spec:
       containers:
-        - name: user
-          image: nagaraj411/user:v1 # User image
-          resources:                  # 🔹 Resource configuration
+      - name: user
+        image: nagaraj411/user:v1
+        resources:
           requests:
-            cpu: "50m"              # 🟡 Minimum CPU required
-            memory: "128Mi"         # 🟡 Minimum memory required
+            cpu: "50m"
+            memory: "128Mi"
           limits:
-            cpu: "100m"             # 🔴 Max CPU allowed
-            memory: "256Mi"         # 🔴 Max memory allowed
-          envFrom:
-          - configMapRef:
-              name: user # Reference to the ConfigMap
+            cpu: "100m"
+            memory: "256Mi"
+        envFrom:
+        - configMapRef:
+            name: user
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: user
-  namespace: roboshop # Namespace for the service
+  namespace: roboshop
   labels:
     component: user
     project: roboshop
@@ -66,27 +67,26 @@ spec:
     project: roboshop
     tier: app
   ports:
-  - protocol: TCP # Protocol for the service
-    port: 8080 # user default service port
+  - protocol: TCP
+    port: 8080 # service port
     targetPort: 8080 # container port
 ---
-# Horizontal Pod Autoscaler: Scale Pods Automatically
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: user                          # 🔹 HPA name
+  name: user
   namespace: roboshop
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: user                          # 🎯 Target: user deployment
-  minReplicas: 1                        # 🟢 Minimum pods
-  maxReplicas: 10                       # 🔺 Maximum pods
+    name: user
+  minReplicas: 1
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
-      name: cpu                     # 📊 Monitored metric
+      name: cpu
       target:
         type: Utilization
-        averageUtilization: 10     # 📈 Scale up if CPU > 10%
+        averageUtilization: 10
