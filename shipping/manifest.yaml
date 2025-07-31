@@ -45,7 +45,7 @@ spec:
               cpu: "100m"              # 🟡 Minimum CPU required
               memory: "128Mi"         # 🟡 Minimum memory required
             limits:
-              cpu: "000m"             # 🔴 Max CPU allowed
+              cpu: "200m"             # 🔴 Max CPU allowed
               memory: "256Mi"         # 🔴 Max memory allowed
           envFrom:
           - configMapRef:
