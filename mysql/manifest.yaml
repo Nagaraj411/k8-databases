@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql                        # 🔑 Secret name
+  labels:
+    component: mysql                # 🧩 Logical grouping
+    project: roboshop               # 📦 Project name
+    tier: database                  # 🗂️ Tier
+type: Opaque                        # 🔒 Generic secret
+data:
+  MYSQL_ROOT_PASSWORD: "Um9ib1Nob3BAMQ=="   # 🔐 base64-encoded root password (Roboshop@1)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless              # 🌐 Headless service
+  namespace: roboshop               # 🧭 Placed in roboshop namespace
+  labels:
+    component: mysql
+    project: roboshop
+    tier: database
+spec:
+  clusterIP: None                   # ❌ No ClusterIP – makes it headless
+  selector:
+    component: mysql
+    project: roboshop
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 3306                      # 🚪 Port exposed by service
+    targetPort: 3306               # 🎯 Port on container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql                       # 🌐 Regular ClusterIP service
+  namespace: roboshop
+  labels:
+    component: mysql
+    project: roboshop
+    tier: database
+spec:
+  selector:
+    component: mysql
+    project: roboshop
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 3306                      # 🚪 Port for client access
+    targetPort: 3306               # 🎯 Mapped to container
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: roboshop
+  labels:
+    component: mysql
+    project: roboshop
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      component: mysql
+      project: roboshop
+      tier: database               # 🧬 Matches pod labels
+  serviceName: "mysql-headless"    # 🔁 Uses headless service for stable DNS
+  replicas: 2                      # 🔁 Two pods will be created
+  template:
+    metadata:
+      labels:
+        component: mysql
+        project: roboshop
+        tier: database
+    spec:
+      containers:
+      - name: mysql
+        image: nagaraj411/mysql:v1  # 🐳 Custom MySQL image
+        envFrom:
+        - secretRef:
+            name: mysql            # 🔐 Inject password from secret
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql  # 📂 Mount volume for data
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data             # 📦 Volume claim per replica
+    spec:
+      accessModes: [ "ReadWriteOnce" ]  # 📥 Only one pod can write
+      storageClassName: "roboshop-ebs"  # 🧱 Use EBS dynamic provisioning
+      resources:
+        requests:
+          storage: 2Gi             # 💾 Each pod gets 2GB

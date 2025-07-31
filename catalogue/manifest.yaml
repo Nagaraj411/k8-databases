@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalogue
+  namespace: roboshop
+  labels:
+    component: catalogue
+    project: roboshop
+    tier: app
+data:
+  MONGO: "true"
+  MONGO_URL: "mongodb://mongodb:27017/catalogue"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: # Deployment metadata
+  name: catalogue
+  namespace: roboshop # Namespace for the deployment
+  labels:
+    component: catalogue
+    project: roboshop
+    tier: app
+    # This is the deployment for catalogue
+spec:
+  replicas: 1 # Number of replicas
+  selector:
+    matchLabels:
+      component: catalogue
+      project: roboshop
+      tier: app
+# this is pod definition
+  template:
+    metadata:
+      labels:
+        component: catalogue
+        project: roboshop
+        tier: app
+    spec:
+      containers:
+      - name: catalogue
+        image: nagaraj411/catalogue:v1 # Catalogue image
+        resources:
+          requests:
+            cpu: "50m" # CPU request
+            memory: "128Mi" # Memory request
+          limits:
+            cpu: "100m" # CPU limit
+            memory: "256Mi" # Memory limit
+        envFrom:
+        - configMapRef:
+            name: catalogue # Reference to the ConfigMap
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalogue
+  namespace: roboshop # Namespace for the service
+  labels:
+    component: catalogue
+    project: roboshop
+    tier: app
+spec:
+  selector:
+    component: catalogue
+    project: roboshop
+    tier: app
+  ports:
+    - protocol: TCP # Protocol for the service
+      port: 8080 # catalogue default service port
+      targetPort: 8080 # container port
