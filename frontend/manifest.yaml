@@ -39,6 +39,13 @@ spec:
       containers:
         - name: frontend
           image: nagaraj411/frontend:v1 # Frontend image
+          resources:                  # 🔹 Resource configuration
+            requests:
+              cpu: "50m"              # 🟡 Minimum CPU required
+              memory: "128Mi"         # 🟡 Minimum memory required
+            limits:
+              cpu: "100m"             # 🔴 Max CPU allowed
+              memory: "256Mi"         # 🔴 Max memory allowed
 ---
 
 apiVersion: v1
@@ -62,3 +69,25 @@ spec:
   - protocol: TCP # Protocol for the service
     port: 80 # frontend default service port
     targetPort: 80 # container port
+
+---
+# Horizontal Pod Autoscaler: Scale Pods Automatically
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend                          # 🔹 HPA name
+  namespace: roboshop
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend                          # 🎯 Target: frontend deployment
+  minReplicas: 1                        # 🟢 Minimum pods
+  maxReplicas: 10                       # 🔺 Maximum pods
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu                     # 📊 Monitored metric
+      target:
+        type: Utilization
+        averageUtilization: 10     # 📈 Scale up if CPU > 10%

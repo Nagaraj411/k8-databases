@@ -90,6 +90,3 @@ spec:
       target:
         type: Utilization
         averageUtilization: 10     # 📈 Scale up if CPU > 10%
-
-
-
