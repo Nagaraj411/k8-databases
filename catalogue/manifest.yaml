@@ -1,91 +1,92 @@
+# ConfigMap: App Environment Variables
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: catalogue
+  name: catalogue                    # 🔹 ConfigMap name
+  namespace: roboshop               # 🔹 Namespace for scope
+  labels:                           # 🔹 Labels for identification
+    component: catalogue
+    project: roboshop
+    tier: app
+data:                               # 🔹 Key-value pairs used in the app
+  MONGO: "true"
+  MONGO_URL: "mongodb://mongodb:27017/catalogue"
+---
+# Deployment: Create & Manage Pods
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue                   # 🔹 Deployment name
   namespace: roboshop
   labels:
     component: catalogue
     project: roboshop
     tier: app
-data:
-  MONGO: "true"
-  MONGO_URL: "mongodb://mongodb:27017/catalogue"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata: # Deployment metadata
-  name: catalogue
-  namespace: roboshop # Namespace for the deployment
-  labels:
-    component: catalogue
-    project: roboshop
-    tier: app
-    # This is the deployment for catalogue
 spec:
-  replicas: 1 # Number of replicas
+  replicas: 1                       # 🔹 Initial number of pod replicas
   selector:
-    matchLabels:
+    matchLabels:                    # 🔹 Matches pods with same labels
       component: catalogue
       project: roboshop
       tier: app
-# this is pod definition
   template:
     metadata:
-      labels:
+      labels:                       # 🔹 Pod labels
         component: catalogue
         project: roboshop
         tier: app
     spec:
       containers:
-      - name: catalogue
-        image: nagaraj411/catalogue:v1 # Catalogue image
-        resources:
+      - name: catalogue             # 🔹 Container name
+        image: nagaraj411/catalogue:v1   # 📦 Custom container image
+        resources:                  # 🔹 Resource configuration
           requests:
-            cpu: "50m" # CPU request
-            memory: "128Mi" # Memory request
+            cpu: "50m"              # 🟡 Minimum CPU required
+            memory: "128Mi"         # 🟡 Minimum memory required
           limits:
-            cpu: "100m" # CPU limit
-            memory: "256Mi" # Memory limit
+            cpu: "100m"             # 🔴 Max CPU allowed
+            memory: "256Mi"         # 🔴 Max memory allowed
         envFrom:
         - configMapRef:
-            name: catalogue # Reference to the ConfigMap
+            name: catalogue         # 🔗 Inject env from ConfigMap
 ---
-
+# Service: Expose the Deployment
 apiVersion: v1
 kind: Service
 metadata:
-  name: catalogue
-  namespace: roboshop # Namespace for the service
+  name: catalogue                   # 🔹 Service name
+  namespace: roboshop
   labels:
     component: catalogue
     project: roboshop
     tier: app
 spec:
-  selector:
+  selector:                         # 🔍 Matches pods by label
     component: catalogue
     project: roboshop
     tier: app
   ports:
-    - protocol: TCP # Protocol for the service
-      port: 8080 # catalogue default service port
-      targetPort: 8080 # container port
+    - protocol: TCP                 # 🔌 Protocol
+      port: 8080                    # 🌐 Service port
+      targetPort: 8080             # 🎯 Container port
 ---
+# Horizontal Pod Autoscaler: Scale Pods Automatically
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: catalogue
+  name: catalogue                   # 🔹 HPA name
   namespace: roboshop
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: catalogue
-  minReplicas: 1
-  maxReplicas: 10
+    name: catalogue                 # 🎯 Target: catalogue deployment
+  minReplicas: 1                    # 🟢 Minimum pods
+  maxReplicas: 10                   # 🔺 Maximum pods
   metrics:
   - type: Resource
     resource:
-      name: cpu
+      name: cpu                     # 📊 Monitored metric
       target:
         type: Utilization
-        averageUtilization: 10
+        averageUtilization: 10     # 📈 Scale up if CPU > 10%
