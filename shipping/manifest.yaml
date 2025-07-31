@@ -1,3 +1,4 @@
+# ✅ ConfigMap: Environment variables for the Shipping service
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,29 +9,28 @@ metadata:
     project: roboshop
     tier: app
 data:
-  CART_ENDPOINT: "cart:8080"
-  DB_HOST: "mysql"
+  CART_ENDPOINT: "cart:8080"     # 🛒 Cart service endpoint
+  DB_HOST: "mysql"               # 💾 MySQL database host
+
 ---
+# ✅ Deployment: Manages the shipping application pods
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: shipping
   namespace: roboshop
-  # deployment labels
-  labels:
+  labels:                         # 🏷️ Deployment-level labels
     component: shipping
     project: roboshop
     tier: app
 spec:
-  replicas: 1
-  # These are the labels replica set use to create pod replicas, this should match pod labels
-  selector:
+  replicas: 1                    # 🔁 Number of pod replicas
+  selector:                      # 🎯 Match these labels to manage pods
     matchLabels:
       component: shipping
       project: roboshop
       tier: app
-  # This is pod definition
-  template:
+  template:                      # 🧱 Pod template definition
     metadata:
       labels:
         component: shipping
@@ -38,19 +38,21 @@ spec:
         tier: app
     spec:
       containers:
-      - name: shipping
-        image: nagaraj411/shipping:v1
-        resources:
+      - name: shipping           # 📦 Container name
+        image: nagaraj411/shipping:v1   # 🖼️ Container image
+        resources:               # ⚙️ Resource requests & limits
           requests:
-            cpu: "100m"
-            memory: "256Mi"
+            cpu: "100m"          # 🟡 Minimum CPU required
+            memory: "256Mi"      # 🟡 Minimum memory required
           limits:
-            cpu: "200m"
-            memory: "512Mi"
+            cpu: "200m"          # 🔴 Max CPU allowed
+            memory: "512Mi"      # 🔴 Max memory allowed
         envFrom:
-        - configMapRef:
+        - configMapRef:          # 🌐 Inject env variables from ConfigMap
             name: shipping
+
 ---
+# ✅ Service: Exposes the Shipping deployment internally
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,31 +63,33 @@ metadata:
     project: roboshop
     tier: app
 spec:
-  selector:
+  selector:                      # 🎯 Connect to matching pods
     component: shipping
     project: roboshop
     tier: app
   ports:
   - protocol: TCP
-    port: 8080 # service port
-    targetPort: 8080 # container port
+    port: 8080                   # 🌐 Service port
+    targetPort: 8080            # 🎯 Container port
+
 ---
+# ✅ HPA (HorizontalPodAutoscaler): Scales pods based on CPU
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: shipping
   namespace: roboshop
 spec:
-  scaleTargetRef:
+  scaleTargetRef:               # 🎯 Target Deployment
     apiVersion: apps/v1
     kind: Deployment
     name: shipping
-  minReplicas: 1
-  maxReplicas: 10
+  minReplicas: 1                # 🔽 Minimum pods
+  maxReplicas: 10               # 🔼 Maximum pods
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
-        type: Utilization
-        averageUtilization: 10
+        type: Utilization       # 📊 Based on CPU usage
+        averageUtilization: 10  # 🎯 Target 10% CPU usage
