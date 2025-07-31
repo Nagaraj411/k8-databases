@@ -51,7 +51,6 @@ spec:
           - configMapRef:
               name: user # Reference to the ConfigMap
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -70,3 +69,24 @@ spec:
   - protocol: TCP # Protocol for the service
     port: 8080 # user default service port
     targetPort: 8080 # container port
+---
+# Horizontal Pod Autoscaler: Scale Pods Automatically
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user                          # 🔹 HPA name
+  namespace: roboshop
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user                          # 🎯 Target: user deployment
+  minReplicas: 1                        # 🟢 Minimum pods
+  maxReplicas: 10                       # 🔺 Maximum pods
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu                     # 📊 Monitored metric
+      target:
+        type: Utilization
+        averageUtilization: 10     # 📈 Scale up if CPU > 10%
