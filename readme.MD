@@ -54,12 +54,14 @@ This project deploys a microservices-based e-commerce platform on a Kubernetes c
 kubectl get all -n <namespace>
 kubectl logs <pod-name> -n <namespace>
 kubectl describe svc <service-name> -n <namespace>
+----
 
-## 🔐 Secrets & Configs
+🔐 Secrets & Configs
+
 Use base64 for encoding sensitive data in Kubernetes secrets.
 
     echo -n 'username' | base64
 
-## 🌟 Happy Deploying!
+🌟 Happy Deploying!
     yaml
 
